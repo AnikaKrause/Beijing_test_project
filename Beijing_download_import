@@ -1,0 +1,76 @@
+Sys.setenv(tz="UTC")
+library(PAM520)
+usePackage(PAM520)
+
+
+##specify your main directory 
+mainDir <- "C:/Users/Anika/Dropbox (Cambridge University)/beijing/data/"
+
+  #mainDir <- "C:/Users/Anika/Desktop/Beijing data/week1/20161118/"
+
+  ##specify dates you want to download data 
+  from        <- as.POSIXct("2016-11-16 00:01:00")
+  to          <- as.POSIXct("2016-11-24 00:00:00")
+  
+  ###either load masterdf from your metatable, or create a metatable with 
+  #PAMs, participants, startdates and enddates you want to look at
+  
+  ## create a fake masterdf 
+  f           <- c(106,109)#c( 100,101,106:120,136:174) 23, 49, 54,62,
+   participant <-  c(0)                      #participant
+  startdate   <-  as.Date("2016-10-01")
+  enddate     <-  as.Date("2017-10-30")
+
+  con=dbConnect(PostgreSQL(), user="postgres", host = "localhost", 
+                port = 5432,
+                dbname="airless", password="n0R3Gr3t")
+  masterdf    <- data.frame(f, participant, startdate, enddate)
+ #masterdf = dbGetQuery(con, "select * from meta") #read.csv("C:/Users/Anika/Desktop/Beijing data/masterdf_21112016.csv")
+  #masterdf = subset(masterdf, masterdf$f ==100 & masterdf$participant ==25)
+###download data
+  
+autodownload(from, to, mainDir, masterdf)
+
+
+
+######################importdata
+
+importdata_v4.3(from , to, mainDir, masterdf)
+importdata_v4.2(from , to, mainDir, masterdf)
+
+Node129 <- readRDS("C:/Users/Anika/Desktop/NodecheckNov2016/3_4Nov2016/level0/node129/node129_2016-11-03_2016-11-04.rds")
+Node130 <- readRDS("C:/Users/Anika/Desktop/NodecheckNov2016/3_4Nov2016/level0/node130/node130_2016-11-03_2016-11-04.rds")
+Node2 <- readRDS("C:/Users/Anika/Desktop/NodecheckNov2016/3_4Nov2016/level0/node2/node2_2016-11-03_2016-11-04.rds")
+Node3 <- readRDS("C:/Users/Anika/Desktop/NodecheckNov2016/3_4Nov2016/level0/node3/node3_2016-11-03_2016-11-04.rds")
+Node141 <- readRDS("C:/Users/Anika/Dropbox (Cambridge University)/beijing/data/level0/node141/node141_2016-11-15_2016-11-22.Rds")
+
+
+  Nodeb <- subset(Node3, date > from & date < as.POSIXct("2016-11-02 20:00:00"))
+
+jpeg( "129zoom.jpg", quality = 200, bg = "white", res = 400, width = 10, height = 10, units = "in")
+timePlot(Node141, pollutant = c("Bat_V","SVM_mean", "CO_uV", "PM1","Bat_V","charging"))
+dev.off()
+
+Nodec <- Node130
+  basemap <- get_map(c(lon = median(Nodec$Lon, na.rm = T), lag = median(Nodec$Lat, na.rm = T)), 
+                     zoom = 15, maptype='roadmap', color='bw',  source='google')
+
+
+
+###do the job
+map1 <- ggmap(basemap, extent='panel', 
+              base_layer=ggplot(Nodec, aes(x=Lon, y=Lat )))
+map2 <- map1 + geom_point(color= "blue", size = 5) 
+#pdf(paste(loop, "_","map.pdf", sep=""), width=20, height=20, paper='special') 
+print(map2)
+#dev.off()
+
+
+
+#summary(Node130)
+ # Nodeb$PM10 <- remove_outliers(Nodeb$PM10)
+  #Nodeb$PM25 <- remove_outliers(Nodeb$PM25)
+  #Nodeb$PM1 <- remove_outliers(Nodeb$PM1)
+#  Nodeb$Tadj <- remove_outliers(Nodeb$Tadj)
+ # Nodeb$Temperature <- remove_outliers(Nodeb$Temperature)
+  #Nodeb$Bat_V <- remove_outliers(Nodeb$Bat_V)
